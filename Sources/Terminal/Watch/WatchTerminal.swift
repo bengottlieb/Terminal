@@ -11,14 +11,18 @@
 import Foundation
 import WatchConnectivity
 
-public class PhoneTerminal: Terminal {
-	public override func send(message: Message) {
-		
-	}
-	
+public class WatchTerminal: Terminal {
+	override var kind: Kind { return .watch }
+
 	func sendState() {
 		
 	}
 }
+
+extension Terminal {
+	static let instance = WatchTerminal()
+	static var isPhone: Bool { return false }
+}
+
 
 #endif

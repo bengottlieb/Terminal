@@ -9,10 +9,15 @@
 import Foundation
 
 public class Terminal {
-	func send(message: Message) { }
+	public enum Kind: Equatable { case phone, watch
+		var other: Kind { return self == .phone ? .watch : .phone }
+	}
 	
 	var state = State()
 	var delegate: TerminalDelegate?
+	var availableMessageTypes: [Message.Type] = []
+
+	var kind: Kind { return .phone }
 }
 
 public protocol TerminalDelegate: class {
@@ -20,10 +25,13 @@ public protocol TerminalDelegate: class {
 	func didUpate(state: Terminal.State)
 }
 
+public typealias MessagePayload = [String: TerminalDataValue]
+
 public protocol Message {
-	var dictionaryValue: [String: TerminalDataValue] { get }
+	var payload: [String: TerminalDataValue] { get }
 	
-	init?(with dictionary: [String: TerminalDataValue])
+	init?(with payload: MessagePayload)
+	func didReceive(from terminal: Terminal.Kind)
 }
 
 public protocol TerminalDataValue { }
@@ -35,3 +43,22 @@ extension Date: TerminalDataValue {}
 extension Double: TerminalDataValue {}
 extension Data: TerminalDataValue {}
 
+struct MessageKeys {
+	static let type = "type"
+	static let payload = "payload"
+}
+
+extension Message {
+	static var messageType: String { return "\(self)" }
+
+	static func register() {
+		Terminal.instance.register(self)
+	}
+
+	func encode() -> [String: Any] {
+		return [
+			MessageKeys.type: type(of: self).messageType,
+			MessageKeys.payload: self.payload
+		]
+	}
+}
